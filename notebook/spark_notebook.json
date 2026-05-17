@@ -18,7 +18,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "8d5dbc09-d94c-4a62-b260-217518777374"
+				"spark.autotune.trackingId": "df1ebfb2-0112-4845-90cd-b4720bcc2386"
 			}
 		},
 		"metadata": {
@@ -93,11 +93,7 @@
 			{
 				"cell_type": "code",
 				"source": [
-					"# Save as a standard Spark managed table\n",
-					"df.write.mode(\"overwrite\").saveAsTable(\"default.txnstbl\")\n",
-					"\n",
-					"# Alternatively, save as a specific format (like Parquet or Delta)\n",
-					"#df.write.format(\"parquet\").mode(\"append\").saveAsTable(\"default.txnstbl\")"
+					"df.write.mode(\"overwrite\").saveAsTable(\"default.txnstbl\")"
 				],
 				"execution_count": 5
 			},
@@ -194,10 +190,8 @@
 			{
 				"cell_type": "code",
 				"source": [
-					"# Define your destination table path: <DatabaseName>.<SchemaName>.<TableName>\n",
 					"target_table = \"dedsqlpool.dbo.tbl1\"\n",
 					"\n",
-					"# Write the DataFrame using the Synapse SQL connector\n",
 					"df.write \\\n",
 					"    .format(\"com.microsoft.spark.sqlanalytics\") \\\n",
 					"    .option(\"Constants.SERVER_NAME\", \"izsynapseworkspace.sql.azuresynapse.net\") \\\n",
