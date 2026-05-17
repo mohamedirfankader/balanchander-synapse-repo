@@ -1,0 +1,243 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"workspaceName": {
+			"type": "string",
+			"metadata": "Workspace name",
+			"defaultValue": "izsynapseworkspace"
+		},
+		"izsynapseworkspace-WorkspaceDefaultSqlServer_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'izsynapseworkspace-WorkspaceDefaultSqlServer'",
+			"defaultValue": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=tcp:izsynapseworkspace.sql.azuresynapse.net,1433;Initial Catalog=@{linkedService().DBName}"
+		},
+		"we47synapse-WorkspaceDefaultSqlServer_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'we47synapse-WorkspaceDefaultSqlServer'",
+			"defaultValue": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=tcp:we47synapse.sql.azuresynapse.net,1433;Initial Catalog=@{linkedService().DBName}"
+		},
+		"izsynapseworkspace-WorkspaceDefaultStorage_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://we47storage1.dfs.core.windows.net"
+		},
+		"we47synapse-WorkspaceDefaultStorage_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://we47toolstorage.dfs.core.windows.net"
+		}
+	},
+	"variables": {
+		"workspaceId": "[concat('Microsoft.Synapse/workspaces/', parameters('workspaceName'))]"
+	},
+	"resources": [
+		{
+			"name": "[concat(parameters('workspaceName'), '/izspark')]",
+			"type": "Microsoft.Synapse/workspaces/bigDataPools",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"annotations": []
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/izsynapseworkspace-WorkspaceDefaultSqlServer')]",
+			"type": "Microsoft.Synapse/workspaces/linkedServices",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"parameters": {
+					"DBName": {
+						"type": "String"
+					}
+				},
+				"annotations": [],
+				"type": "AzureSqlDW",
+				"typeProperties": {
+					"connectionString": "[parameters('izsynapseworkspace-WorkspaceDefaultSqlServer_connectionString')]"
+				},
+				"connectVia": {
+					"referenceName": "AutoResolveIntegrationRuntime",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/integrationRuntimes/AutoResolveIntegrationRuntime')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/izsynapseworkspace-WorkspaceDefaultStorage')]",
+			"type": "Microsoft.Synapse/workspaces/linkedServices",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobFS",
+				"typeProperties": {
+					"url": "[parameters('izsynapseworkspace-WorkspaceDefaultStorage_properties_typeProperties_url')]"
+				},
+				"connectVia": {
+					"referenceName": "AutoResolveIntegrationRuntime",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/integrationRuntimes/AutoResolveIntegrationRuntime')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/we47synapse-WorkspaceDefaultSqlServer')]",
+			"type": "Microsoft.Synapse/workspaces/linkedServices",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"parameters": {
+					"DBName": {
+						"type": "String"
+					}
+				},
+				"annotations": [],
+				"type": "AzureSqlDW",
+				"typeProperties": {
+					"connectionString": "[parameters('we47synapse-WorkspaceDefaultSqlServer_connectionString')]"
+				},
+				"connectVia": {
+					"referenceName": "AutoResolveIntegrationRuntime",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/integrationRuntimes/AutoResolveIntegrationRuntime')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/we47synapse-WorkspaceDefaultStorage')]",
+			"type": "Microsoft.Synapse/workspaces/linkedServices",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobFS",
+				"typeProperties": {
+					"url": "[parameters('we47synapse-WorkspaceDefaultStorage_properties_typeProperties_url')]"
+				},
+				"connectVia": {
+					"referenceName": "AutoResolveIntegrationRuntime",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/integrationRuntimes/AutoResolveIntegrationRuntime')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/AutoResolveIntegrationRuntime')]",
+			"type": "Microsoft.Synapse/workspaces/integrationRuntimes",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"type": "Managed",
+				"typeProperties": {
+					"computeProperties": {
+						"location": "AutoResolve",
+						"dataFlowProperties": {
+							"computeType": "General",
+							"coreCount": 8,
+							"timeToLive": 0
+						}
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/WorkspaceSystemIdentity')]",
+			"type": "Microsoft.Synapse/workspaces/credentials",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"type": "ManagedIdentity",
+				"typeProperties": {}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/1_Exploring_Data_Synapse_SQL')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"content": {
+					"query": "----------------------------------------------------------\n--In this usecase, We are learning about OPENROWSET, JSON data parsing using JSON_VALUE & CROSS APPLY OPENJSON, DELTA & PARQUERY format also\n----------------------------------------------------------\n--SQL Script to work in Azure Synapse Serverless Warehouse\n----------------------------------------------------------\n\n--database (logical container of related schemas/external tables/) creation\n--Default schema where our tables are referred (DBO - Data Base owner)\ncreate database wd36db;\n\n--https (Object/Blob Storage & Slow)\n--Openrowset (Instructing SQL engine to not consider the data as a traditional inline data in the SQL DB, rather it is in a open filesystem of set of files and produce result in a form of rows) will instruct Synapse to access the large volume of data as a rowset using the serverless SQL engine \nselect * from OPENROWSET(\n    BULK 'https://we47toolstorage.dfs.core.windows.net/adfcontainer/sourcedir/productdata.txt',--Blob uri\n    FORMAT = 'CSV',\n    PARSER_VERSION = '2.0'\n) as data1;\n\n--abfss (ADLS Gen2 & Fast)\nselect * from OPENROWSET(\n    BULK 'abfss://adfcontainer@we47toolstorage.dfs.core.windows.net/sourcedir/productdata.txt', --ADLS uri\n    FORMAT = 'CSV',\n    PARSER_VERSION = '2.0'\n) as data1;\n\n\n--header row as column names(HEADER_ROW)\n\nselect * from OPENROWSET( --like a Dataframe\n    BULK 'abfss://adfcontainer@we47toolstorage.dfs.core.windows.net/sourcedir/productdata.txt',--location\n    FORMAT = 'CSV',--spark.read.csv\n    HEADER_ROW = TRUE,--header=True in spark\n    PARSER_VERSION = '2.0'--spark version\n) as data1;\n\n--Accessing only specific columns\nselect amt from OPENROWSET(\n    BULK 'abfss://adfcontainer@we47toolstorage.dfs.core.windows.net/sourcedir/productdata.txt',\n    FORMAT = 'CSV',\n    HEADER_ROW = TRUE,\n    PARSER_VERSION = '2.0'\n) as data1;\n\n--filter data\nselect  * from OPENROWSET(\n    BULK 'abfss://adfcontainer@we47toolstorage.dfs.core.windows.net/sourcedir/productdata.txt',\n    FORMAT = 'CSV',\n    HEADER_ROW = TRUE,\n    PARSER_VERSION = '2.0'\n) as data1\nwhere amt>300;\n\n--group by (de duplicating)\nselect * from OPENROWSET(\n    BULK 'abfss://adfcontainer@we47toolstorage.dfs.core.windows.net/sourcedir/productdata.txt',\n    FORMAT = 'CSV',\n    HEADER_ROW = TRUE,\n    PARSER_VERSION = '2.0'\n) as data1\ngroup by prodid,amt;\n\n--aggregation\nselect  sum(amt) from OPENROWSET(\n    BULK 'abfss://adfcontainer@we47toolstorage.dfs.core.windows.net/sourcedir/productdata.txt',\n    FORMAT = 'CSV',\n    HEADER_ROW = TRUE,\n    PARSER_VERSION = '2.0'\n) as data1;\n\nselect  * from OPENROWSET(\n    BULK 'abfss://adfcontainer@we47toolstorage.dfs.core.windows.net/sourcedir/productdata.txt',\n    FORMAT = 'CSV',\n    HEADER_ROW = TRUE,\n    PARSER_VERSION = '2.0'\n) as data1\ninner join \nOPENROWSET(\n    BULK 'abfss://adfcontainer@we47toolstorage.dfs.core.windows.net/sourcedir/productdata.txt',\n    FORMAT = 'CSV',\n    HEADER_ROW = TRUE,\n    PARSER_VERSION = '2.0'\n) as data2\non data1.prodid=data2.prodid;\n\n--setting the column names using WITH clause (Schema Evolution or Enrichment or with column function)\nselect prodid,'2026-05-16' loaddt,amt from OPENROWSET(\n    BULK 'https://we47toolstorage.dfs.core.windows.net/adfcontainer/sourcedir/productdata.txt',\n    FORMAT = 'CSV',\n    PARSER_VERSION = '2.0',HEADER_ROW=TRUE\n)\nWITH --withcolumn function\n(   prodid int,\n\tloaddt date,\n    amt int )\nas txns;\n\n--Json data Analytics\n--Basic/Complex JSON Data Read using CSV trick, since direct JSON function doesn't work in Synapse - This query uses the \"CSV trick\" to read the entire JSON file as a single column.\n--Complex way to access the nested json elements, not advisable to use!!!\nSELECT *\n,JSON_VALUE(jsondata, '$[0].shipment_id') AS shipment_id, --from_json() in spark\nJSON_VALUE(jsondata, '$[0].order_id') AS order_id\nFROM OPENROWSET(\n    BULK 'https://we47toolstorage.dfs.core.windows.net/adfcontainer/sourcedir/logistics_shipment_detail_3000_1.json',\n    FORMAT = 'CSV',  -- CSV trick to read raw JSON\n    FIELDTERMINATOR = '0x0b',--dummy delimiter\n    FIELDQUOTE = '0x0b',\n    ROWTERMINATOR = '0x0b'\n) \nWITH (\n    jsondata NVARCHAR(MAX)\n)\nAS rows;\n\n\n--Accessing Complex json\n--CROSS APPLY OPENJSON(jsondata): This tells Synapse to iterate through each item in the JSON array (it will run for loop behind the scene)\n--Internal WITH clause: This maps the specific JSON key ($.shipment_id) to a SQL column and assigns it the correct data type (INT).\n\nSELECT \n    ship_id,\n    order_id,\n    source_city,\n    destination_city,\n    shipment_status,\n    cargo_type,\n    vehicle_type,\n    payment_mode,\n    shipment_weight_kg,\n    shipment_cost,\n    shipment_date\nFROM OPENROWSET(\n    BULK 'https://we47toolstorage.dfs.core.windows.net/adfcontainer/sourcedir/logistics_shipment_detail_3000_1.json',\n    FORMAT = 'CSV',\n    FIELDTERMINATOR = '0x0b',\n    FIELDQUOTE = '0x0b',\n    ROWTERMINATOR = '0x0b'\n) \nWITH (\n    jsondata NVARCHAR(MAX)\n) AS src\nCROSS APPLY OPENJSON(jsondata) --Explode Function - Iterating on the list of json objects, hence we don't need use index to read the respective rows\n--$ = { \"shipment_id\": 5008467, \"order_id\": \"ORD100000\", \"source_city\": \"Chennai\", \"destination_city\": \"Pune\", \"shipment_status\": \"CREATED\", \"cargo_type\": \"Electronics\", \"vehicle_type\": \"Bike\", \"payment_mode\": \"COD\", \"shipment_weight_kg\": 476.12, \"shipment_cost\": 30695.8, \"shipment_date\": \"24-04-23\" }\nWITH (\n    ship_id INT '$.shipment_id', --parsing the current row json object\n    order_id VARCHAR(100) '$.order_id',\n    source_city VARCHAR(100) '$.source_city',\n    destination_city VARCHAR(100) '$.destination_city',\n    shipment_status VARCHAR(50) '$.shipment_status',\n    cargo_type VARCHAR(100) '$.cargo_type',\n    vehicle_type VARCHAR(50) '$.vehicle_type',\n    payment_mode VARCHAR(50) '$.payment_mode',\n    shipment_weight_kg FLOAT '$.shipment_weight_kg',\n    shipment_cost FLOAT '$.shipment_cost',\n    shipment_date VARCHAR(20) '$.shipment_date'\n) AS rows;\n\n\n\n-- How to use Synapse SQL Serverless Warehouse Openrowset to analyze data from ADLS Delta directly without creating table.\nSELECT\n    TOP 100 *\nFROM\n    OPENROWSET(\n        BULK 'https://we47toolstorage.dfs.core.windows.net/adfcontainer/salesreportdelta/',\n        FORMAT = 'DELTA'\n    ) AS [result]\n\n\n-- How to use Synapse SQL Serverless Warehouse Openrowset to analyze data from ADLS Parquet directly without creating table.\nSELECT\n    TOP 100 *\nFROM\n    OPENROWSET(\n        BULK 'abfss://container1@we47toolstorage.dfs.core.windows.net/we47adfdata/inceptez_insurance.claim_transactions.parquet',\n        FORMAT = 'PARQUET'\n    ) AS [result]\n",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "wd36db",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/2_Datasource_Ext_Tables')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"content": {
+					"query": "--Concepts we are learning in this usecase \n-- 1. Learning about usage of External Data Source in the OPENROWSET function\n-- 2. Learning about usage of External Data Source, External File Format & External Table Concept\n\nuse wd36db;\n\n--to list the database names\nselect name from sys.databases;\n\n\n--How the table is accessed hierarchy in the Azure Sysnapse: dbname.schemaname.tablename\nselect top 10 * from wd36schema.dbo.claims_parquet;\n\n-- 1. Learning about usage of External Data Source in the OPENROWSET function\n---------------------------------------------------------\n-- CREATE EXTERNAL DATA SOURCE\n---------------------------------------------------------\n\nUSE wd36db;\n\n--DROP EXTERNAL DATA SOURCE raw_container;\n--Ext Data source for BLOB storage (Not preferred)\nCREATE EXTERNAL DATA SOURCE datasource_blob\nWITH\n(\n    LOCATION = 'https://we47toolstorage.dfs.core.windows.net/container1/'\n);\n\n--Ext Data source for ADLS storage (preferred for performance)\nCREATE EXTERNAL DATA SOURCE datasource_adls\nWITH\n(\n    LOCATION = 'abfss://container1@we47toolstorage.dfs.core.windows.net/'\n);\n\n\n---------------------------------------------------------\n-- READ CSV USING OPENROWSET function using EXTERNAL DATA SOURCE\n---------------------------------------------------------\n--Accessing BLOB data\nSELECT *\nFROM OPENROWSET(\n    BULK 'synapsedata/custs',--Only folder and file we can just change, no need of using the fixed storage acct or container info everytime\n    DATA_SOURCE = 'datasource_blob',--I don't require to give the complete uri of the ADLS/BLOB everytime in the openrowset\n    FORMAT = 'CSV',\n    HEADER_ROW = FALSE,\n    PARSER_VERSION = '2.0'\n) AS data1;\n\n--Accessing ADLS data\nSELECT *\nFROM OPENROWSET(\n    BULK 'synapsedata/custs',\n    DATA_SOURCE = 'datasource_adls',\n    FORMAT = 'CSV',\n    HEADER_ROW = FALSE,\n    PARSER_VERSION = '2.0'\n) AS data1;\n\n\n--Using openrowset With Header (equivalent to what in spark? schema(StructType(StructField))))\nSELECT *\nFROM OPENROWSET(\n    BULK 'synapsedata/custs',\n    DATA_SOURCE = 'datasource_adls',\n    FORMAT = 'CSV',\n    PARSER_VERSION = '2.0'\n) \nWITH ( --schema(structtype(structfield....))\n    CustomerID INT,\n    FirstName VARCHAR(100),\n    LastName VARCHAR(50),\n    Age INT,\n    Occupation VARCHAR(100)\n) AS data1;\n\n\n--2. Learning about usage of EXTERNAL FILE FORMAT + External Data Source + EXTERNAL TABLES\n\n---------------------------------------------------------\n-- CREATE EXTERNAL DATA SOURCE  to define the storage acct and container once for all\n---------------------------------------------------------\n\nCREATE EXTERNAL DATA SOURCE datasource_adls1\nWITH\n(\n    LOCATION = 'abfss://container1@we47toolstorage.dfs.core.windows.net/'\n);\n\n---------------------------------------------------------\n-- CREATE EXTERNAL FILE FORMAT  to define the file format, delimiter, header etc., once for all\n---------------------------------------------------------\n--This Command defines how Azure Synapse should interpret the structure of a flat file\n\n--DROP EXTERNAL FILE FORMAT synapse_csv_format;\nCREATE EXTERNAL FILE FORMAT csv_comma_noheader_format\nWITH\n(\n    FORMAT_TYPE = DELIMITEDTEXT,\n    FORMAT_OPTIONS\n    (\n        FIELD_TERMINATOR = ',',--delimiter/sep in spark\n        FIRST_ROW = 1 --Read the data from line 1 onwards (since we don't have header)\n    )\n);\n\n\n---------------------------------------------------------\n-- CREATE EXTERNAL TABLE once for all to allow our analytics users or Power BI dashboard, to access the underlying ADLS datalake data..\n---------------------------------------------------------\n\nCREATE EXTERNAL TABLE ext_cust_table\n(\n    CustomerID INT,\n    FirstName VARCHAR(50),\n    LastName VARCHAR(50),\n    Age INT,\n    Occupation VARCHAR(100)\n)\nWITH\n(\n    LOCATION = 'synapsedata/custs',\n    DATA_SOURCE = datasource_adls1,\n    FILE_FORMAT = csv_comma_noheader_format\n);\n\nselect * from ext_cust_table;--Behind the scene, structure come from metadata(sqlserver), data come from ADLS, compute come from Synapse Serverless\n\n\n---------------------------------------------------------\n-- CREATE EXTERNAL TABLE (with first row header): \n---------------------------------------------------------\n\nCREATE EXTERNAL FILE FORMAT synapse_csv_format_header\nWITH\n(\n    FORMAT_TYPE = DELIMITEDTEXT,\n    FORMAT_OPTIONS\n    (\n        FIELD_TERMINATOR = ',',\n        FIRST_ROW = 2 --Read the data from 2nd row onwards\n    )\n);\n\n--drop external table ext_cust_tbl_header; --Very very important interview question - Drop will only drop the table structure but not the data\nCREATE EXTERNAL TABLE ext_cust_tbl_header\n(\n    custid INT,\n    fname VARCHAR(50),\n    lname VARCHAR(50),\n    age INT,\n    prof VARCHAR(100)--inside the file, header has profession, i am overriding with prof\n)\nWITH\n(\n    LOCATION = 'synapsedata/custs_header',\n    DATA_SOURCE = datasource_adls1,\n    FILE_FORMAT = synapse_csv_format_header);\n\n---------------------------------------------------------\n-- QUERY EXTERNAL TABLE\n---------------------------------------------------------\n\nselect * from ext_cust_tbl_header;\n\n--Very very important interview question? CTE means what or have you used CTE queries?\n--CTE - Common Table Expression \n\n\n--Inline View/From Clause Subquery (extracting data from ext_cust_tbl_header twice to reuse as t1 and t3)\n--Not performant or good practice of writing query in general.\n--select * from (some query here) as temptbl;\n\nselect t1.*,t2.* from \n(select * from ext_cust_tbl_header) t1\ninner join (select * from ext_cust_tbl_header) t2\non t1.custid=t2.custid\nunion \nselect t3.* from (select * from ext_cust_tbl_header) t3;\n\n--Common table expression (extracting data from ext_cust_tbl_header only once and reuse as t1 multiple times in the given query)\n--CTE\n-- rather than writing like this (inline view), select * from (some query here) as temptbl;\n-- write the query like this (CTE), with temptbl as (some query here) select * from temptl1;\n\nwith t1 as (select * from ext_cust_tbl_header),\nt2 as (select * from ext_cust_tbl_header)\nselect t1.*,t2.* from t1 inner join t2 on t1.custid=t2.custid\nunion \nselect t1.*,1 custid,'x' fname,'y' lname,1 age,'x' prof from t1\nUNION\nselect t2.*,1 custid,'x' fname,'y' lname,1 age,'x' prof from t2;\n\n\n",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "wd36db",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/3_CETAS_JSON_PARQUET_Analytics_Usecase')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"content": {
+					"query": "-- Enabling JSON data for Analytics users in an optimal format ready for Analytics using CETAS\n--EXTRACT Raw array of JSON Files (ADLS) using OPENROWSET -> Curation using  CROSS APPLY OPENJSON Parsing -> \n-- Using CETAS we are going to LOAD data in a External Table (Parquet Optimized Files) -> Consumption Analytics / Power BI\n\nuse wd36db;\n\nCREATE EXTERNAL DATA SOURCE logistics_ds\nWITH (\n    LOCATION = 'https://we47toolstorage.dfs.core.windows.net/adfcontainer'\n);\n\nCREATE EXTERNAL FILE FORMAT parquet_format\nWITH (\n    FORMAT_TYPE = PARQUET );\n\n--CETAS is used to Extract (json), Transform (json to structured) & Load the data into ADLS (parquet)\nCREATE EXTERNAL TABLE ext_logistics_shipments_parquet\nWITH (\n    LOCATION = 'curated2/logistics_shipments/',\n    DATA_SOURCE = logistics_ds,\n    FILE_FORMAT = parquet_format\n)\nAS\n\nSELECT \n    shipment_id,\n    order_id,\n    source_city,\n    SUBSTRING(source_city,1,2) city_cd,\n    destination_city,\n    shipment_status,\n    cargo_type,\n    vehicle_type,\n    payment_mode,\n    shipment_weight_kg,\n    shipment_cost,\n    shipment_date\n\nFROM OPENROWSET(\n    BULK 'sourcedir/logistics_shipment_detail_3000_1.json',\n    DATA_SOURCE = 'logistics_ds',\n    FORMAT = 'CSV',\n    FIELDTERMINATOR = '0x0b',\n    FIELDQUOTE = '0x0b',\n    ROWTERMINATOR = '0x0b'\n) \nWITH (\n    jsondata NVARCHAR(MAX)\n) AS src\n\nCROSS APPLY OPENJSON(jsondata)\nWITH (\n    shipment_id INT '$.shipment_id',\n    order_id VARCHAR(100) '$.order_id',\n    source_city VARCHAR(100) '$.source_city',\n    destination_city VARCHAR(100) '$.destination_city',\n    shipment_status VARCHAR(50) '$.shipment_status',\n    cargo_type VARCHAR(100) '$.cargo_type',\n    vehicle_type VARCHAR(50) '$.vehicle_type',\n    payment_mode VARCHAR(50) '$.payment_mode',\n    shipment_weight_kg FLOAT '$.shipment_weight_kg',\n    shipment_cost FLOAT '$.shipment_cost',\n    shipment_date VARCHAR(20) '$.shipment_date'\n) AS rows;\n\nselect * from ext_logistics_shipments_parquet;--client3 can access this data directly from the table in an optimized fashion (parquet format)\n\n--Expose Only Required Columns & rows to business creating views\nCREATE OR ALTER VIEW vw_logistics_shipments_client1 \n--View is a stored query to reduce complexity of writing queries again and again or for applying column/row level restrictions for securing my data etc.,\nAS\nSELECT\n    shipment_id,\n    order_id,\n    source_city,\n    destination_city,\n    shipment_status\nFROM ext_logistics_shipments_parquet;\n\nselect * from vw_logistics_shipments_client1;\n\nCREATE OR ALTER VIEW vw_delivered_shipments_client2\nAS\nSELECT *\nFROM ext_logistics_shipments_parquet\nWHERE shipment_status = 'Delivered';\n\nselect * from vw_delivered_shipments_client2;\n\n\n--0. Create a master (encrypted password) key to create scoped credential\nCREATE MASTER KEY ENCRYPTION BY PASSWORD = 'Incepteztechnologies@123';\n\n-- 1. Create the Database Scoped Credential using Managed Identity\n-- Note: 'Managed Identity' is a reserved keyword here; do not change it.\nCREATE DATABASE SCOPED CREDENTIAL creds_mi\nWITH IDENTITY = 'Managed Identity';\nGO\n\n-- 2. Create the External Data Source pointing to your ADLS\n-- Use the '.dfs.' endpoint for ADLS Gen2 performance\nCREATE EXTERNAL DATA SOURCE bankdata_source_mi\nWITH\n(\n    LOCATION = 'https://izstorageacct1.blob.core.windows.net/thirdpartycontainer/sourcedata/',\n    CREDENTIAL = creds_mi\n);\nGO\n\n-- 3. Test the connection by querying a file\nSELECT *\nFROM OPENROWSET(\n    BULK 'custs',\n    DATA_SOURCE = 'bankdata_source_mi',\n    FORMAT = 'CSV',\n    HEADER_ROW = FALSE,\n    PARSER_VERSION = '2.0'\n) AS data1;\n\n",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "wd36db",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/izspark')]",
+			"type": "Microsoft.Synapse/workspaces/bigDataPools",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"autoPause": {
+					"enabled": true,
+					"delayInMinutes": 60
+				},
+				"autoScale": {
+					"enabled": false,
+					"maxNodeCount": 10,
+					"minNodeCount": 3
+				},
+				"nodeCount": 3,
+				"nodeSize": "Small",
+				"nodeSizeFamily": "MemoryOptimized",
+				"sparkVersion": "3.5",
+				"isComputeIsolationEnabled": false,
+				"sessionLevelPackagesEnabled": false,
+				"annotations": []
+			},
+			"dependsOn": [],
+			"location": "centralus"
+		}
+	]
+}
