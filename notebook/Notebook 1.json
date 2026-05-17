@@ -17,7 +17,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "de3076c3-251f-49ee-94df-731cfc0a4aa6"
+				"spark.autotune.trackingId": "4a87d4c1-6c24-48a9-82c9-38519da4e7f5"
 			}
 		},
 		"metadata": {
@@ -54,7 +54,15 @@
 					"df = spark.read.format(\"csv\").option(\"inferschema\",True).load(\"abfss://container1@we47storage1.dfs.core.windows.net/sourcedir/txns\") \\\n",
 					".toDF(\"txnid\",\"txndate\",\"custid\",\"amount\",\"category\",\"product\",\"city\",\"state\",\"paytype\")\n",
 					"df.printSchema()\n",
-					"df.show()"
+					"df.show(2)"
+				],
+				"execution_count": null
+			},
+			{
+				"cell_type": "code",
+				"source": [
+					"df.write.saveAsTable(\"default.txnstbl\",mode='overwrite')\n",
+					"spark.read.sql(\"select * from default.txnstbl\").show()"
 				],
 				"execution_count": null
 			}
