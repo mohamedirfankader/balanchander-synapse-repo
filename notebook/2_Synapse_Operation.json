@@ -1,5 +1,5 @@
 {
-	"name": "Notebook 1",
+	"name": "2_Synapse_Operation",
 	"properties": {
 		"nbformat": 4,
 		"nbformat_minor": 2,
@@ -17,7 +17,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "659da67e-5a1d-478d-b13b-db5d75fd818d"
+				"spark.autotune.trackingId": "50f93a14-9ea1-4abb-ad67-b0feeb51ddbd"
 			}
 		},
 		"metadata": {
@@ -49,22 +49,66 @@
 		},
 		"cells": [
 			{
-				"cell_type": "code",
+				"cell_type": "markdown",
+				"metadata": {
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
 				"source": [
-					"df = spark.read.format(\"csv\").option(\"inferschema\",True).load(\"abfss://container1@we47storage1.dfs.core.windows.net/sourcedir/txns\") \\\n",
-					".toDF(\"txnid\",\"txndate\",\"custid\",\"amount\",\"category\",\"product\",\"city\",\"state\",\"paytype\")\n",
-					"df.printSchema()\n",
-					"df.show(2)"
+					"## Reading Data from Synapse"
+				]
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"collapsed": false
+				},
+				"source": [
+					"# 1. Add required imports to bind 'synapsesql' to the Spark session\n",
+					"import com.microsoft.spark.sqlanalytics\n",
+					"from com.microsoft.spark.sqlanalytics.Constants import Constants\n",
+					"\n",
+					"# 2. Define your table reference (<DatabaseName>.<SchemaName>.<TableName>)\n",
+					"dedicated_table = \"dedsqlwh.dbo.tbl1\"\n",
+					"\n",
+					"# 3. Read the dedicated table into a Spark DataFrame\n",
+					"df = spark.read.synapsesql(dedicated_table)\n",
+					"\n",
+					"# 4. Show data\n",
+					"display(df.limit(10))"
 				],
-				"execution_count": null
+				"execution_count": 9
+			},
+			{
+				"cell_type": "markdown",
+				"metadata": {
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"## Writing Data from Synapse"
+				]
 			},
 			{
 				"cell_type": "code",
 				"source": [
-					"df.write.saveAsTable(\"default.txnstbl\",mode='overwrite')\n",
-					"spark.sql(\"select * from default.txnstbl\").show()"
+					"# 1. Define your target table path (<DatabaseName>.<SchemaName>.<TableName>)\n",
+					"# Note: Ensure the schema (e.g., 'dbo') exists in your 'dedsqlwh' database.\n",
+					"target_table = \"dedsqlwh.dbo.tbl3\"\n",
+					"\n",
+					"# 2. Write the data using the native, token-authenticated connector\n",
+					"df.write \\\n",
+					"    .format(\"com.microsoft.spark.sqlanalytics\") \\\n",
+					"    .mode(\"overwrite\") \\\n",
+					"    .synapsesql(target_table)"
 				],
-				"execution_count": null
+				"execution_count": 8
 			}
 		]
 	}
